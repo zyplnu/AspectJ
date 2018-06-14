@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/aop
+                           http://www.springframework.org/schema/aop/spring-aop.xsd
+                           http://www.springframework.org/schema/jee
+                           http://www.springframework.org/schema/jee/spring-jee.xsd">
+
+    <jee:jndi-lookup jndi-name="java:comp/env/jdbc/bbt" id="dataSource"/>
+
+    <!--<bean id="waiter" class="com.smart.aop.NativeWaiter"/>
+
+    <bean class="com.smart.aspect.PreGreetingAspect"/>
+
+    <bean class="org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator"/>-->
+
+    <!--基于@AspectJ切面的驱动器-->
+    <!--<aop:aspectj-autoproxy/>
+    <bean id="nativeWaiter" class="com.smart.aop.NativeWaiter"/>
+    <bean id="naughtyWaiter" class="com.smart.aop.NaughtyWaiter"/>
+    <bean class="com.smart.aspect.TestAspect"/>-->
+
+    <bean id="adviceMethods" class="com.smart.advice.AdviceMethods"/>
+
+    <bean id="nativeWaiter" class="com.smart.aop.NativeWaiter"/>
+
+    <bean id="naughtyWaiter" class="com.smart.aop.NaughtyWaiter"/>
+
+    <!--前置增强1-->
+    <aop:config proxy-target-class="true">
+        <aop:pointcut id="greetToPointcut" expression="target(com.smart.aop.NativeWaiter) and execution(* greetTo(..))"/>
+        <aop:aspect ref="adviceMethods">
+            <!--<aop:before method="preGreeting"
+                        pointcut="target(com.smart.aop.Waiter) and execution(* greetTo(..))"/>-->
+            <aop:before method="preGreeting" pointcut-ref="greetToPointcut"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--前置增强给pointcut起别名-->
+    <aop:config proxy-target-class="true">
+        <aop:pointcut id="greetToPointcut" expression="target(com.smart.aop.NativeWaiter) and execution(* greetTo(..))"/>
+        <aop:aspect ref="adviceMethods">
+            <aop:before method="preGreeting" pointcut-ref="greetToPointcut"/>
+        </aop:aspect>
+        <aop:aspect ref="adviceMethods">
+            <aop:after method="preGreeting" pointcut-ref="greetToPointcut"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--后置增强-->
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="adviceMethods">
+            <aop:after-returning method="afterReturning"
+                                 pointcut="target(com.smart.aop.SmartSeller)"
+                                 returning="retVal"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--环绕增强-->
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="adviceMethods">
+            <aop:around method="afterMethod"
+                        pointcut="execution(* serveTo(..)) and within(com.smart.aop.Waiter)"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--抛出异常增强-->
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="adviceMethods">
+            <aop:after-throwing method="afterThrowingMethod"
+                                pointcut="target(com.smart.aop.SmartSeller) and execution(* checkBill(..))"
+                                throwing="iae"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--Final增强-->
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="adviceMethods">
+            <aop:after method="afterMethod"
+                       pointcut="execution(* com..*.Waiter.greetTo(..))"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--引介增强-->
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="adviceMethods">
+            <aop:declare-parents types-matching="com.smart.aop.Waiter+"
+                                 implement-interface="com.smart.aop.Seller"
+                                 default-impl="com.smart.aop.SmartSeller"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!--绑定连接点信息-->
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="adviceMethods">
+            <aop:before method="bindParams"
+                        pointcut="target(com.smart.aop.NativeWaiter) and args(name , num , ..)"/>
+        </aop:aspect>
+    </aop:config>
+
+    <bean id="testAdvice" class="com.smart.advice.TestBeforeAdvice"/>
+
+    <!--Advisor配置-->
+    <aop:config proxy-target-class="true">
+        <aop:advisor advice-ref="testAdvice"
+                     pointcut="execution(* com..*.Waiter.greetTo(..))"/>
+    </aop:config>
+</beans>
